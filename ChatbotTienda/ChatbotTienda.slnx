@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="ChatbotTienda.Entidades/ChatbotTienda.Entidades.csproj" />
+  <Project Path="ChatbotTienda.Logica/ChatbotTienda.Logica.csproj" />
+  <Project Path="ChatbotTienda.Web/ChatbotTienda.Web.csproj" />
+</Solution>
