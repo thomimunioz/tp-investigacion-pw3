@@ -1,7 +1,12 @@
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDbContext<ChatbotDbContext>(o =>
+    o.UseSqlServer(builder.Configuration.GetConnectionString("ChatbotTienda")));
 
 var app = builder.Build();
 
