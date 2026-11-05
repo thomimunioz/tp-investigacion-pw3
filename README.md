@@ -13,15 +13,15 @@ Es un chatbot de atención al cliente para una tienda online. Clasifica cada men
 
 ## Requisitos
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- .NET 10 SDK
 - SQL Server Express (`localhost`) u otro SQL Server
 - Herramienta de Entity Framework: `dotnet tool install --global dotnet-ef`
-- [Ollama](https://ollama.com/download) y el modelo descargado: `ollama pull llama3.2`
+- Ollama y el modelo descargado: `ollama pull llama3.2`
 
 ## Estructura
 
 | Proyecto | Contenido |
-|---|---|
+| --- | --- |
 | `ChatbotTienda.Entidades` | Entidades, `DbContext` y migraciones |
 | `ChatbotTienda.Logica` | Servicios con la lógica de negocio (autenticación, conversaciones, chatbot, métricas) |
 | `ChatbotTienda.Web` | Aplicación MVC: controladores, vistas y ViewModels |
@@ -30,17 +30,30 @@ Es un chatbot de atención al cliente para una tienda online. Clasifica cada men
 
 Todos los comandos se ejecutan desde la carpeta raíz del repositorio.
 
-1. **Configurar la base de datos.** Si tu SQL Server no es `localhost`, cambiá la cadena `ChatbotTienda` en `ChatbotTienda/ChatbotTienda.Web/appsettings.json`.
+1. Configurar la base de datos. `appsettings.json` trae `Server=localhost`.
+Si tu SQL Server tiene otro nombre (por ejemplo SQL Express), **no modifiques
+ese archivo**: configuralo solo en tu máquina con user-secrets:
+    
+    ```powershell
+    dotnet user-secrets init --project ChatbotTienda/ChatbotTienda.Web
+    dotnet user-secrets set "ConnectionStrings:ChatbotTienda" "Server=.\SQLEXPRESS;Database=ChatbotTienda;Trusted_Connection=True;TrustServerCertificate=True" --project ChatbotTienda/ChatbotTienda.Web
+    ```
+    
 2. **Crear la base con las migraciones:**
-   ```
-   dotnet ef database update --project ChatbotTienda/ChatbotTienda.Entidades --startup-project ChatbotTienda/ChatbotTienda.Web
-   ```
+    
+    ```
+    dotnet ef database update --project ChatbotTienda/ChatbotTienda.Entidades --startup-project ChatbotTienda/ChatbotTienda.Web
+    ```
+    
 3. **Levantar Ollama** (si no quedó corriendo como servicio): `ollama serve`
 4. **Levantar la aplicación:**
-   ```
-   dotnet run --project ChatbotTienda/ChatbotTienda.Web --launch-profile https
-   ```
-   Abrir https://localhost:7091.
+    
+    ```
+    dotnet run --project ChatbotTienda/ChatbotTienda.Web --launch-profile https
+    ```
+    
+    Abrir https://localhost:7091.
+    
 
 ## Forma de trabajo
 
