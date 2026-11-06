@@ -1,0 +1,145 @@
+@model ChatbotTienda.Entidades.Conversacion
+@using ChatbotTienda.Entidades.Enums
+
+@{
+    ViewData["Title"] = Model.Titulo;
+    bool estaBloqueada = Model.Estado != EstadoConversacion.Activa;
+
+    string ObtenerBadgeEstado(EstadoConversacion estado) => estado switch
+    {
+        EstadoConversacion.Activa => "bg-success",
+        EstadoConversacion.Resuelta => "bg-secondary",
+        EstadoConversacion.Derivada => "bg-warning text-dark",
+        _ => "bg-info"
+    };
+}
+
+<div class="container py-3" style="max-width: 850px;">
+    <div class="card shadow-sm border-0">
+        
+        <!-- Cabecera. -->
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <a asp-controller="Conversaciones" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                    ← Volver
+                </a>
+
+                <div>
+                    <h5 class="mb-0 fw-bold">@Model.Titulo</h5>
+                    <span id="badgeEstado" class="badge @ObtenerBadgeEstado(Model.Estado)">
+                        @Model.Estado
+                    </span>
+                </div>
+            </div>
+
+            @if (Model.Estado == EstadoConversacion.Activa)
+            {
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalValoracion">
+                    Finalizar y valorar
+                </button>
+            }
+        </div>
+
+        <!-- Banner de alerta si fue derivada o resuelta. -->
+        <div id="alertaEstado" class="alert m-3 mb-0 @(Model.Estado == EstadoConversacion.Derivada ? "alert-warning" : Model.Estado == EstadoConversacion.Resuelta ? "alert-secondary" : "d-none")">
+            @if (Model.Estado == EstadoConversacion.Derivada)
+            {
+                <span>⚠️ Esta conversación fue derivada a un agente humano. El envío de mensajes automáticos está deshabilitado.</span>
+            }
+            else if (Model.Estado == EstadoConversacion.Resuelta)
+            {
+                <span>✓ Esta conversación fue finalizada y resuelta.</span>
+            }
+        </div>
+
+        <!-- Cuerpo del chat (mensajes). -->
+        <div id="chatContainer" data-conversacion-id="@Model.Id" class="card-body overflow-auto p-4" style="height: 480px; background-color: #f8f9fa;">
+            @foreach (var msg in Model.Mensajes.OrderBy(m => m.FechaEnvio))
+            {
+                if (msg.Emisor == EmisorMensaje.Usuario)
+                {
+                    <div class="d-flex justify-content-end mb-3">
+                        <div class="bg-primary text-white p-3 rounded-4 shadow-sm" style="max-width: 75%;">
+                            <p class="mb-1">@msg.Contenido</p>
+                            <small class="d-block text-end opacity-75" style="font-size: 0.75rem;">
+                                @msg.FechaEnvio.ToLocalTime().ToString("HH:mm")
+                            </small>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex justify-content-start mb-3">
+                        <div class="bg-white border p-3 rounded-4 shadow-sm" style="max-width: 75%;">
+                            <small class="text-primary fw-bold d-block mb-1">🤖 Asistente</small>
+                            <p class="mb-1 text-dark">@msg.Contenido</p>
+                            <small class="d-block text-end text-muted" style="font-size: 0.75rem;">
+                                @msg.FechaEnvio.ToLocalTime().ToString("HH:mm")
+                            </small>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Pie: formulario de envío. -->
+        <div class="card-footer bg-white border-top p-3">
+            <form id="formChat" onsubmit="enviarMensaje(event)">
+                @Html.AntiForgeryToken()
+                <div class="input-group">
+                    <input type="text" id="inputMensaje" class="form-control" 
+                           placeholder="@(estaBloqueada ? "Conversación cerrada" : "Escribí tu consulta acá...")" 
+                           autocomplete="off" @(estaBloqueada ? "disabled" : "") />
+
+                    <button class="btn btn-primary px-4" type="submit" id="btnEnviar" @(estaBloqueada ? "disabled" : "")>
+                        Enviar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal para finalizar y valorar. -->
+<div class="modal fade" id="modalValoracion" tabindex="-1" aria-labelledby="modalValoracionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="modalValoracionLabel">Calificá la atención</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="formValoracion" onsubmit="finalizarYValorar(event)">
+                <div class="modal-body">
+                    <p class="text-muted">¿Cómo calificarías la respuesta del asistente virtual?</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Puntaje (1 al 5):</label>
+                        <select id="puntajeValoracion" class="form-select" required>
+                            <option value="5" selected>⭐⭐⭐⭐⭐ (5 - Excelente)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 - Muy bueno)</option>
+                            <option value="3">⭐⭐⭐ (3 - Regular)</option>
+                            <option value="2">⭐⭐ (2 - Malo)</option>
+                            <option value="1">⭐ (1 - Muy malo)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Comentario (opcional):</label>
+                        <textarea id="comentarioValoracion" class="form-control" rows="3" placeholder="Dejanos tu opinión..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar y finalizar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/chat.js" asp-append-version="true"></script>
+}
