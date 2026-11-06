@@ -1,9 +1,14 @@
 using Microsoft.EntityFrameworkCore;
+using ChatbotTienda.Logica.Estadisticas;
+using ChatbotTienda.Logica.Conversaciones;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<IEstadisticasServicio, EstadisticasServicio>();
+builder.Services.AddScoped<IConversacionServicio, ConversacionServicio>();
 
 builder.Services.AddDbContext<ChatbotDbContext>(o =>
     o.UseSqlServer(builder.Configuration.GetConnectionString("ChatbotTienda")));

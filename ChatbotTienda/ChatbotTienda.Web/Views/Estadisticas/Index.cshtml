@@ -1,0 +1,123 @@
+
+@model EstadisticasViewModel
+
+@{
+    ViewData["Title"] = "Panel de métricas";
+
+    var maximo = Model.MensajesPorIntencion.Any()
+        ? Model.MensajesPorIntencion.Max(x => x.Cantidad)
+        : 1;
+}
+
+<div class="container py-4">
+
+    <div class="mb-4">
+        <h1 class="fw-bold">Panel de métricas</h1>
+        <p class="text-muted">
+            Estadísticas generales del funcionamiento del chatbot.
+        </p>
+    </div>
+
+    <!-- Indicadores principales -->
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-6 col-xl-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Tasa de contención</h6>
+                    <h2 class="fw-bold text-success">
+                        @Model.TasaContencion.ToString("N1")%
+                    </h2>
+                    <p class="small text-muted mb-0">
+                        Conversaciones resueltas:
+                        @Model.TotalConversaciones
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">CSAT</h6>
+                    <h2 class="fw-bold text-primary">
+                        @Model.Csat.ToString("N1")%
+                    </h2>
+                    <p class="small text-muted mb-0">
+                        Total de valoraciones:
+                        @Model.TotalValoraciones
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Tasa de fallback</h6>
+                    <h2 class="fw-bold text-warning">
+                        @Model.TasaFallback.ToString("N1")%
+                    </h2>
+                    <p class="small text-muted mb-0">
+                        Mensajes de usuarios:
+                        @Model.TotalMensajesUsuario
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Mensajes por intención -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+
+            <h4 class="fw-bold mb-1">Mensajes por intención</h4>
+
+            <p class="text-muted mb-4">
+                Cantidad de consultas clasificadas según su intención.
+            </p>
+
+            @if (Model.MensajesPorIntencion.Any())
+            {
+                @foreach (var item in Model.MensajesPorIntencion)
+                {
+                    var porcentaje =
+                        (decimal)item.Cantidad / maximo * 100;
+
+                    <div class="mb-4">
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-semibold">
+                                @item.Intencion
+                            </span>
+
+                            <span class="text-muted">
+                                @item.Cantidad mensajes
+                            </span>
+                        </div>
+
+                        <div class="progress" style="height: 12px;">
+                            <div class="progress-bar bg-success"
+                                 role="progressbar"
+                                 style="width: @porcentaje.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%"
+                                 aria-valuenow="@item.Cantidad"
+                                 aria-valuemin="0"
+                                 aria-valuemax="@maximo">
+                            </div>
+                        </div>
+
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">
+                    Todavía no hay mensajes clasificados por intención.
+                </div>
+            }
+
+        </div>
+    </div>
+
+</div>
