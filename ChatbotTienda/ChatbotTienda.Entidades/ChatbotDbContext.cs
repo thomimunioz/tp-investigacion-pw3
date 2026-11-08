@@ -114,7 +114,7 @@ public class ChatbotDbContext : DbContext
                 Nombre = "hablar_con_humano",
                 Descripcion = "Pide hablar con una persona o expresa que el bot no lo ayuda.",
                 RespuestaBase = "Entiendo. Te voy a comunicar con un agente para que continúe la atención.",
-                RequiereDerivacion = false,
+                RequiereDerivacion = true,
                 Activa = true
             },
             new Intencion
