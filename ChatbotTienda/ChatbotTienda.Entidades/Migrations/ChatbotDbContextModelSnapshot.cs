@@ -150,7 +150,7 @@ namespace ChatbotTienda.Entidades.Migrations
                             Activa = true,
                             Descripcion = "Pide hablar con una persona o expresa que el bot no lo ayuda.",
                             Nombre = "hablar_con_humano",
-                            RequiereDerivacion = false,
+                            RequiereDerivacion = true,
                             RespuestaBase = "Entiendo. Te voy a comunicar con un agente para que continúe la atención."
                         },
                         new
