@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using ChatbotTienda.Logica.Autenticacion;
 using ChatbotTienda.Logica.Estadisticas;
 using ChatbotTienda.Logica.Conversaciones;
 using ChatbotTienda.Logica.Chatbot;
@@ -10,6 +12,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(o =>
+    {
+        o.LoginPath = "/Cuenta/Login";
+        o.LogoutPath = "/Cuenta/Logout";
+        o.AccessDeniedPath = "/Cuenta/AccesoDenegado";
+    });
+
+builder.Services.AddScoped<IAutenticacionServicio, AutenticacionServicio>();
 builder.Services.AddScoped<IEstadisticasServicio, EstadisticasServicio>();
 builder.Services.AddScoped<IConversacionServicio, ConversacionServicio>();
 builder.Services.AddScoped<IChatbotServicio, ChatbotServicio>();
@@ -35,6 +46,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
