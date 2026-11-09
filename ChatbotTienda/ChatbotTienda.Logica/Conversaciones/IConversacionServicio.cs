@@ -9,4 +9,5 @@ public interface IConversacionServicio
         int puntaje,
         string? comentario
     );
+    Task FinalizarYValorarAsync(int conversacionId, int estrellas, string comentario);
 }

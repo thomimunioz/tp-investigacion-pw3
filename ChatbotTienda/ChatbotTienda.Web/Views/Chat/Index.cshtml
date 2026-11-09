@@ -16,7 +16,7 @@
 
 <div class="container py-3" style="max-width: 850px;">
     <div class="card shadow-sm border-0">
-        
+
         <!-- Cabecera. -->
         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
@@ -87,8 +87,8 @@
             <form id="formChat" onsubmit="enviarMensaje(event)">
                 @Html.AntiForgeryToken()
                 <div class="input-group">
-                    <input type="text" id="inputMensaje" class="form-control" 
-                           placeholder="@(estaBloqueada ? "Conversación cerrada" : "Escribí tu consulta acá...")" 
+                    <input type="text" id="inputMensaje" class="form-control"
+                           placeholder="@(estaBloqueada ? "Conversación cerrada" : "Escribí tu consulta acá...")"
                            autocomplete="off" @(estaBloqueada ? "disabled" : "") />
 
                     <button class="btn btn-primary px-4" type="submit" id="btnEnviar" @(estaBloqueada ? "disabled" : "")>
@@ -110,12 +110,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form id="formValoracion" onsubmit="finalizarYValorar(event)">
+            <!-- Formulario HTML clásico (apunta a la acción Finalizar que agregamos) -->
+            <form action="/Chat/Finalizar" method="post">
+                <input type="hidden" name="conversacionId" value="@Model.Id" />
+
                 <div class="modal-body">
                     <p class="text-muted">¿Cómo calificarías la respuesta del asistente virtual?</p>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Puntaje (1 al 5):</label>
-                        <select id="puntajeValoracion" class="form-select" required>
+                        <select name="estrellas" class="form-select" required>
                             <option value="5" selected>⭐⭐⭐⭐⭐ (5 - Excelente)</option>
                             <option value="4">⭐⭐⭐⭐ (4 - Muy bueno)</option>
                             <option value="3">⭐⭐⭐ (3 - Regular)</option>
@@ -126,7 +129,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Comentario (opcional):</label>
-                        <textarea id="comentarioValoracion" class="form-control" rows="3" placeholder="Dejanos tu opinión..."></textarea>
+                        <textarea name="comentario" class="form-control" rows="3" placeholder="Dejanos tu opinión..."></textarea>
                     </div>
                 </div>
 

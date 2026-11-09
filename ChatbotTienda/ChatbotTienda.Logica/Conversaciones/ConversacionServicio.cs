@@ -75,4 +75,27 @@ public class ConversacionServicio : IConversacionServicio
 
         return FinalizarConversacionResultado.Correcto();
     }
+
+    public async Task FinalizarYValorarAsync(int conversacionId, int estrellas, string comentario)
+    {
+        // Buscamos el chat actual
+        var conversacion = await _context.Conversaciones.FindAsync(conversacionId);
+        if (conversacion != null)
+        {
+            // 1. Cerramos el chat (fijate que el Enum se llame así, si no cambialo por el que usen)
+            conversacion.Estado = ChatbotTienda.Entidades.Enums.EstadoConversacion.Resuelta;
+
+            // 2. Creamos la valoración
+            var valoracion = new ChatbotTienda.Entidades.Valoracion
+            {
+                ConversacionId = conversacionId,
+                Puntaje = estrellas,
+                Comentario = comentario,
+                Fecha = DateTime.UtcNow
+            };
+
+            _context.Valoraciones.Add(valoracion);
+            await _context.SaveChangesAsync();
+        }
+    }
 }
