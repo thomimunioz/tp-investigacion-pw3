@@ -14,9 +14,11 @@ public class ChatbotServicio : IChatbotServicio
 
     private const string IntencionNinguna = "ninguna";
 
+    // Respuesta cuando el mensaje no corresponde a ninguna intención (fallback):
+    // dice lo que el bot SÍ puede hacer y ofrece un agente.
     private const string RespuestaNoEntendi =
-        "No estoy seguro de haber entendido tu consulta. Puedo ayudarte con pedidos, envíos, medios de pago, " +
-        "devoluciones y horarios, o comunicarte con un agente.";
+        "No tengo información sobre eso. Puedo ayudarte con el estado de tu pedido, medios de pago, costos de envío, " +
+        "cambios y devoluciones, horarios de atención y consultas sobre productos. Si querés, también te puedo comunicar con un agente.";
 
     private readonly ChatbotDbContext _context;
     private readonly IChatClient _chatClient;
@@ -75,7 +77,7 @@ public class ChatbotServicio : IChatbotServicio
 
         mensajes.Add(new ChatMessage(ChatRole.User, texto));
 
-        // 4. Pedirle al modelo la respuesta con la forma de RespuestaBot (JSON con Intencion y Respuesta)
+        // 4. Pedirle al modelo que CLASIFIQUE el mensaje (devuelve solo el nombre de la intención)
         ChatResponse<RespuestaBot> respuestaModelo;
         try
         {
@@ -88,16 +90,21 @@ public class ChatbotServicio : IChatbotServicio
             return ResultadoChatbot.Fallo("El asistente no está disponible. Revisá que Ollama esté corriendo.");
         }
 
-        // Si el modelo devolvió algo que no se puede leer como RespuestaBot, se toma como "no entendí"
-        if (!respuestaModelo.TryGetResult(out var respuestaBot) || string.IsNullOrWhiteSpace(respuestaBot.Respuesta))
+        string nombreIntencion = IntencionNinguna;
+        if (respuestaModelo.TryGetResult(out var respuestaBot) && !string.IsNullOrWhiteSpace(respuestaBot.Intencion))
+        {
+            nombreIntencion = respuestaBot.Intencion.Trim();
+        }
+        else
         {
             // Queda en la consola de dotnet run, para saber qué devolvió el modelo
             _logger.LogWarning("No se pudo leer la respuesta del modelo: {Texto}", respuestaModelo.Text);
-            respuestaBot = new RespuestaBot { Intencion = IntencionNinguna, Respuesta = RespuestaNoEntendi };
         }
 
-        // 5. Buscar la intención detectada en el catálogo (null = fallback)
-        var intencion = intenciones.FirstOrDefault(i => i.Nombre == respuestaBot.Intencion);
+        // 5. Buscar la intención en el catálogo (null = fallback) y elegir la respuesta.
+        // La respuesta sale de la base de datos, nunca del modelo: el bot solo dice lo que está cargado.
+        var intencion = intenciones.FirstOrDefault(i => i.Nombre == nombreIntencion);
+        var textoRespuesta = intencion != null ? intencion.RespuestaBase : RespuestaNoEntendi;
 
         if (intencion != null && intencion.RequiereDerivacion)
         {
@@ -118,7 +125,7 @@ public class ChatbotServicio : IChatbotServicio
         {
             ConversacionId = conversacion.Id,
             Emisor = EmisorMensaje.Bot,
-            Contenido = respuestaBot.Respuesta,
+            Contenido = textoRespuesta,
             FechaEnvio = DateTime.UtcNow
         };
 
@@ -128,33 +135,31 @@ public class ChatbotServicio : IChatbotServicio
 
         await _context.SaveChangesAsync();
 
-        return ResultadoChatbot.Correcto(respuestaBot.Respuesta, intencion?.Nombre, conversacion.Estado, mensajeBot.FechaEnvio);
+        return ResultadoChatbot.Correcto(textoRespuesta, intencion?.Nombre, conversacion.Estado, mensajeBot.FechaEnvio);
     }
 
-    // Mensaje de sistema: le explica al modelo su rol y le pasa el catálogo de intenciones
+    // Mensaje de sistema: le explica al modelo que solo tiene que clasificar y le pasa el catálogo de intenciones
     private static string ArmarInstrucciones(List<Intencion> intenciones)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Sos el asistente virtual de atención al cliente de una tienda online.");
-        sb.AppendLine("Respondé siempre en español, de forma breve y amable.");
-        sb.AppendLine("Solo respondés consultas sobre la tienda. Nunca respondas preguntas de otros temas " +
-                      "(cultura general, geografía, deportes, etc.), aunque sepas la respuesta.");
-        sb.AppendLine();
-        sb.AppendLine("Para cada mensaje del usuario:");
-        sb.AppendLine("1. Clasificalo en UNA de las intenciones de la lista y devolvé su nombre exacto en \"Intencion\".");
-        sb.AppendLine("2. En \"Respuesta\", respondé usando SOLO la información de esa intención. No inventes datos.");
-        sb.AppendLine("Tené en cuenta los mensajes anteriores: si el usuario acepta hablar con un agente, la intención es la de hablar con una persona.");
+        sb.AppendLine("Sos el clasificador de mensajes del asistente virtual de una tienda online.");
+        sb.AppendLine("Tu única tarea es decidir a qué intención de la lista corresponde el último mensaje del usuario " +
+                      "y devolver su nombre exacto en \"intencion\". No respondas al usuario.");
+        sb.AppendLine($"Si el mensaje no corresponde exactamente a ninguna intención, aunque sea sobre la tienda " +
+                      $"(por ejemplo facturación, sucursales o promociones) o sobre otro tema, devolvé \"{IntencionNinguna}\".");
+        sb.AppendLine("Tené en cuenta los mensajes anteriores: si el asistente ofreció comunicarlo con un agente y el usuario acepta, " +
+                      "la intención es la de hablar con una persona.");
         sb.AppendLine();
         sb.AppendLine("Intenciones:");
 
+        // La RespuestaBase va como contexto para que el modelo entienda de qué trata cada intención
+        // (el modelo no la escribe: la usa la aplicación para responder)
         foreach (var intencion in intenciones)
         {
-            sb.AppendLine($"- {intencion.Nombre}: {intencion.Descripcion} Información para responder: {intencion.RespuestaBase}");
+            sb.AppendLine($"- {intencion.Nombre}: {intencion.Descripcion} (Lo que se le responde: {intencion.RespuestaBase})");
         }
 
-        // "ninguna" va como una intención más de la lista: con modelos chicos funciona mejor que una regla aparte
-        sb.AppendLine($"- {IntencionNinguna}: El mensaje no tiene que ver con la tienda ni con ninguna de las intenciones anteriores. " +
-                      "Información para responder: decí que solo podés ayudar con consultas de la tienda y preguntá si quiere que lo comuniques con un agente.");
+        sb.AppendLine($"- {IntencionNinguna}: El mensaje no corresponde a ninguna de las intenciones anteriores.");
 
         return sb.ToString();
     }

@@ -125,6 +125,15 @@ public class ChatbotDbContext : DbContext
                 RespuestaBase = "¡De nada! Si necesitás algo más, acá estoy. ¡Que tengas un buen día!",
                 RequiereDerivacion = false,
                 Activa = true
+            },
+            new Intencion
+            {
+                Id = 9,
+                Nombre = "consultar_productos",
+                Descripcion = "Pregunta por precios, stock, talles, colores o características de los productos.",
+                RespuestaBase = "Los precios, talles y el stock actualizado de cada producto están en el catálogo de la web. Si no encontrás lo que buscás, te puedo comunicar con un agente.",
+                RequiereDerivacion = false,
+                Activa = true
             }
         );
     }
