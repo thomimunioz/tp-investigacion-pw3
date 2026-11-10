@@ -1,8 +1,118 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Inicio";
+    bool logueado = User.Identity?.IsAuthenticated == true;
+
+    // Lo que el bot sabe resolver (coincide con las intenciones cargadas en la base)
+    var temas = new[]
+    {
+        (Icono: "📦", Titulo: "Estado de tu pedido", Texto: "Dónde está tu compra y cuándo llega."),
+        (Icono: "💳", Titulo: "Medios de pago", Texto: "Tarjetas, transferencia, efectivo y cuotas."),
+        (Icono: "🚚", Titulo: "Costos de envío", Texto: "Cuánto sale y cuándo es gratis."),
+        (Icono: "🔄", Titulo: "Cambios y devoluciones", Texto: "Plazos y condiciones para cambiar un producto."),
+        (Icono: "🕘", Titulo: "Horarios de atención", Texto: "Cuándo atiende la tienda."),
+        (Icono: "👕", Titulo: "Productos", Texto: "Precios, talles y stock en el catálogo.")
+    };
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- Presentación -->
+<section class="hero rounded-4 p-4 p-md-5 mb-5">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+            <span class="badge rounded-pill bg-white text-primary mb-3 px-3 py-2">Asistente virtual con IA</span>
+            <h1 class="display-5 fw-bold mb-3">Resolvé tus dudas de la tienda en segundos</h1>
+            <p class="lead mb-4 opacity-75">
+                Escribile como le escribirías a una persona. El asistente entiende qué necesitás
+                y, si no puede ayudarte, te comunica con un agente.
+            </p>
+
+            @if (logueado)
+            {
+                <div class="d-flex flex-wrap gap-2">
+                    <form asp-controller="Conversaciones" asp-action="Crear" method="post" class="m-0">
+                        <button type="submit" class="btn btn-light btn-lg fw-semibold px-4">💬 Iniciar chat</button>
+                    </form>
+                    <a asp-controller="Conversaciones" asp-action="Index" class="btn btn-outline-light btn-lg px-4">Mis conversaciones</a>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-controller="Cuenta" asp-action="Registro" class="btn btn-light btn-lg fw-semibold px-4">Crear cuenta gratis</a>
+                    <a asp-controller="Cuenta" asp-action="Login" class="btn btn-outline-light btn-lg px-4">Ya tengo cuenta</a>
+                </div>
+            }
+        </div>
+
+        <!-- Vista previa de una conversación -->
+        <div class="col-lg-6 d-none d-lg-block">
+            <div class="chat-preview bg-white rounded-4 shadow p-4">
+                <div class="d-flex justify-content-end mb-3">
+                    <div class="burbuja burbuja-usuario">¿Dónde está mi pedido?</div>
+                </div>
+                <div class="d-flex justify-content-start mb-3">
+                    <div class="burbuja burbuja-bot">
+                        <small class="text-primary fw-bold d-block mb-1">🤖 Asistente</small>
+                        Podés ver el estado de tu pedido en la sección Mis pedidos, con tu número de seguimiento.
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end mb-3">
+                    <div class="burbuja burbuja-usuario">¿Aceptan tarjeta?</div>
+                </div>
+                <div class="d-flex justify-content-start">
+                    <div class="burbuja burbuja-bot">
+                        <small class="text-primary fw-bold d-block mb-1">🤖 Asistente</small>
+                        Aceptamos tarjetas de crédito y débito, transferencia y efectivo.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Qué puede resolver -->
+<section class="mb-5">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">¿En qué te puede ayudar?</h2>
+        <p class="text-muted">Estas son las consultas que el asistente sabe responder.</p>
+    </div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+        @foreach (var tema in temas)
+        {
+            <div class="col">
+                <div class="card tarjeta-tema h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="tema-icono mb-3">@tema.Icono</div>
+                        <h5 class="fw-semibold">@tema.Titulo</h5>
+                        <p class="text-muted mb-0">@tema.Texto</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Cómo funciona -->
+<section class="mb-5">
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+            <h2 class="fw-bold text-center mb-4">¿Cómo funciona?</h2>
+            <div class="row g-4 text-center">
+                <div class="col-md-4">
+                    <div class="paso-numero mx-auto mb-3">1</div>
+                    <h5 class="fw-semibold">Escribís tu consulta</h5>
+                    <p class="text-muted mb-0">Con tus palabras, sin menús ni opciones fijas.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="paso-numero mx-auto mb-3">2</div>
+                    <h5 class="fw-semibold">La IA entiende la intención</h5>
+                    <p class="text-muted mb-0">Un modelo de lenguaje identifica qué necesitás.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="paso-numero mx-auto mb-3">3</div>
+                    <h5 class="fw-semibold">Recibís la respuesta</h5>
+                    <p class="text-muted mb-0">Con la información oficial de la tienda, o un agente si hace falta.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
