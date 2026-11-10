@@ -1,10 +1,12 @@
 
 using ChatbotTienda.Logica.Estadisticas;
 using ChatbotTienda.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatbotTienda.Web.Controllers;
 
+[Authorize(Roles = "Administrador")]
 public class EstadisticasController : Controller
 {
     private readonly IEstadisticasServicio _estadisticasServicio;
