@@ -56,4 +56,11 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ChatbotDbContext>();
+    await db.Database.MigrateAsync();
+    await DatosDemo.SembrarAsync(db);
+}
+
 app.Run();
