@@ -1,11 +1,10 @@
 namespace ChatbotTienda.Logica.Chatbot;
 
-// Forma de la respuesta que le pedimos al modelo (salida estructurada).
-// El modelo tiene que devolver un JSON con estas dos propiedades.
-// "required" hace que el esquema JSON que se le manda al modelo las marque como obligatorias:
-// sin eso, a veces devolvía solo la intención y dejaba la respuesta afuera.
+// Lo que le pedimos al modelo (salida estructurada): solo el nombre de la intención.
+// El modelo NO redacta la respuesta: el texto sale de Intencion.RespuestaBase en la base de datos,
+// así el bot nunca inventa datos (precios, stock, etc.).
+// "required" hace que el esquema JSON marque la propiedad como obligatoria.
 public class RespuestaBot
 {
     public required string Intencion { get; set; }
-    public required string Respuesta { get; set; }
 }

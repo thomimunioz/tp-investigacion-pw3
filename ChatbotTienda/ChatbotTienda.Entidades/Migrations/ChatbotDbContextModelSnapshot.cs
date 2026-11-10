@@ -161,6 +161,15 @@ namespace ChatbotTienda.Entidades.Migrations
                             Nombre = "despedida",
                             RequiereDerivacion = false,
                             RespuestaBase = "¡De nada! Si necesitás algo más, acá estoy. ¡Que tengas un buen día!"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Activa = true,
+                            Descripcion = "Pregunta por precios, stock, talles, colores o características de los productos.",
+                            Nombre = "consultar_productos",
+                            RequiereDerivacion = false,
+                            RespuestaBase = "Los precios, talles y el stock actualizado de cada producto están en el catálogo de la web. Si no encontrás lo que buscás, te puedo comunicar con un agente."
                         });
                 });
 
